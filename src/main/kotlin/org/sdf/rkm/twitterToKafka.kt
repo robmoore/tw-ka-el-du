@@ -3,6 +3,7 @@ package org.sdf.rkm
 import mu.KotlinLogging
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.LongSerializer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -16,9 +17,15 @@ private fun TwitterStream.addListenerFixed(listener: StatusListener) {
 
 private fun createProducer(): Producer<Long, String> {
     val props = Properties()
-    props["bootstrap.servers"] = "localhost:9092"
-    props["key.serializer"] = LongSerializer::class.java.canonicalName
-    props["value.serializer"] = StringSerializer::class.java.canonicalName
+    props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+    props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = LongSerializer::class.java.canonicalName
+    props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.canonicalName
+
+    props[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = "true"
+    props[ProducerConfig.COMPRESSION_TYPE_CONFIG] = "snappy"
+    props[ProducerConfig.LINGER_MS_CONFIG] = "20"
+    props[ProducerConfig.BATCH_SIZE_CONFIG] = "32768"
+
     return KafkaProducer(props)
 }
 
@@ -68,12 +75,3 @@ fun main() {
     produce()
 }
 
-/*
-Could use Avro instead?
-
-https://github.com/sksamuel/avro4k
-https://github.com/sksamuel/avro4k/issues/1
-https://github.com/thake/avro4k-kafka-serializer
-
-https://www.confluent.io/confirmation-docker
- */
